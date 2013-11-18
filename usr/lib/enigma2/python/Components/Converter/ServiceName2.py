@@ -8,7 +8,7 @@
 # Version: 0.6 (19.10.2012) add stream mapping
 # Version: 0.7 (19.09.2013) add iptv info - nikolasi & 2boom
 # Version: 0.8 (29.10.2013) add correct output channelnumner - Dmitry73
-# Version: 0.9 (18.11.2013) code fix and optimization - Taapat & nikolasi
+# Version: 0.9 (15.11.2013) code fix and optimization - Taapat
 # Support: http://dream.altmaster.net/ & http://gisclub.tv
 #
 
@@ -22,7 +22,6 @@ try:
 except:
 	correctChannelNumber = False
 
-IPTVcontrol = False
 class ServiceName2(Converter, object):
 	NAME = 0
 	NUMBER = 1
@@ -32,8 +31,7 @@ class ServiceName2(Converter, object):
 	ORBPOS = 5
 	TPRDATA = 6
 	SATELLITE = 7
-	ALLREFERENCE = 8
-	FORMAT = 9	
+	FORMAT = 8
 
 	def __init__(self, type):
 		Converter.__init__(self, type)
@@ -53,13 +51,11 @@ class ServiceName2(Converter, object):
 			self.type = self.TPRDATA
 		elif type == "Satellite":
 			self.type = self.SATELLITE
-		elif type == "AllReference":
-			self.type = self.ALLREFERENCE
 		else:
 			self.type = self.FORMAT
 			self.sfmt = type[:]
 		try:
-			if (self.type == 1 or (self.type == 9 and '%n' in self.sfmt)) and correctChannelNumber:
+			if (self.type == 1 or (self.type == 8 and '%n' in self.sfmt)) and correctChannelNumber:
 				ChannelNumberClasses.append(self.forceChanged)
 		except:
 			pass
@@ -123,7 +119,7 @@ class ServiceName2(Converter, object):
 				return number, name
 		return 0, ''
 
-	def getProviderName(self, ref):
+	def getProviderName(self, ref, sname):
 		if isinstance(ref, eServiceReference):
 			from Screens.ChannelSelection import service_types_radio, service_types_tv
 			typestr = ref.getData(0) in (2,10) and service_types_radio or service_types_tv
@@ -145,6 +141,7 @@ class ServiceName2(Converter, object):
 								if service == ref:
 									info = serviceHandler.info(provider)
 									return info and info.getName(provider) or "Unknown"
+			return self.getIPTVProvider(sname)
 		return " "
 
 	def getTransponderInfo(self, info, ref, fmt):
@@ -155,13 +152,13 @@ class ServiceName2(Converter, object):
 				self.tpdata = None
 				return result
 		type = self.tpdata.get('tuner_type', '')
-		if not fmt or fmt == 'T':
+		if fmt == '' or fmt == '%T':
 			if type == 'DVB-C':
-				fmt = ["t ","F ","Y ","i ","f ","M"]	#(type frequency symbol_rate inversion fec modulation)
+				fmt = '%t %F %Y %i %f %M'	#(type frequency symbol_rate inversion fec modulation)
 			elif type == 'DVB-T':
-				fmt = ["t ","F ","h ","m ","g ","c"]	#(type frequency code_rate_hp transmission_mode guard_interval constellation)
+				fmt = '%t %F %h %m %g %c'	#(type frequency code_rate_hp transmission_mode guard_interval constellation)
 			else:
-				fmt = ["O ","F","p ","Y ","f"]		#(orbital_position frequency polarization symbol_rate fec)
+				 fmt = '%O %F%p %Y %f'		#(orbital_position frequency polarization symbol_rate fec)
 		for line in fmt:
 			f = line[:1]
 			if f == 't':	# %t - tuner_type (dvb-s/s2/c/t)
@@ -195,8 +192,6 @@ class ServiceName2(Converter, object):
 				if type == 'DVB-S':
 					x = self.tpdata.get('orbital_position', 0)
 					result += x > 1800 and "%d.%d°W"%((3600-x)/10, (3600-x)%10) or "%d.%d°E"%(x/10, x%10)
-				elif type == 'DVB-T':
-					result += 'DVB-T'		
 			elif f == 'M':	# %M - modulation (dvb-s/s2/c)
 				x = self.tpdata.get('modulation', 1)
 				if type == 'DVB-S':
@@ -249,7 +244,7 @@ class ServiceName2(Converter, object):
 			result += line[1:]
 		return result
 
-	def getSatelliteName(self, ref):
+	def getSatelliteName(self, ref, sname):
 		if isinstance(ref, eServiceReference):
 			orbpos = ref.getUnsignedData(4) >> 16
 			if orbpos == 0xFFFF: #Cable
@@ -257,7 +252,7 @@ class ServiceName2(Converter, object):
 			elif orbpos == 0xEEEE: #Terrestrial
 				return _("Terrestrial")
 			elif orbpos == 0: #IPTV
-				if IPTVcontrol:
+				if 'http' in sname:
 					return _("IPTV")
 			else: #Satellite
 				orbpos = ref.getData(4) >> 16
@@ -272,12 +267,16 @@ class ServiceName2(Converter, object):
 					elif refString.startswith("1:134:"):
 						return _("Altern")
 					else:
-						return orbpos > 1800 and "%d.%d°W"%((3600-orbpos)/10, (3600-orbpos)%10) or "%d.%d°E"%(orbpos/10, orbpos%10)
+						name = orbpos > 1800 and "%d.%d°W"%((3600-orbpos)/10, (3600-orbpos)%10) or "%d.%d°E"%(orbpos/10, orbpos%10)
 		return ""
 
 	def getIPTVProvider(self, sname):
+		if 'http' not in sname:
+			return " "
 		if 'tvshka' in sname:
 			return "SCHURA"
+		elif 'vsadmin' in sname:
+			return "IPTV" 
 		elif '3a4050' in sname:
 			return "Ukrtelecom"
 		elif '3a7777' in sname:
@@ -306,7 +305,6 @@ class ServiceName2(Converter, object):
 
 	@cached
 	def getText(self):
-		global IPTVcontrol
 		service = self.source.service
 		if isinstance(service, iPlayableServicePtr):
 			info = service and service.info()
@@ -316,10 +314,6 @@ class ServiceName2(Converter, object):
 			ref = service
 		if info is None: return ""
 		sname = ref and ref.toString() or info.getInfoString(iServiceInformation.sServiceref)
-		if 'http' in sname:
-			IPTVcontrol = True
-		else:
-			IPTVcontrol = False
 		if self.type == self.NAME:
 			name = ref and (info.getName(ref) or 'N/A') or (info.getName() or 'N/A')
 			return name.replace('\xc2\x86', '').replace('\xc2\x87', '')
@@ -338,33 +332,25 @@ class ServiceName2(Converter, object):
 			num, bouq = self.getServiceNumber(ref or eServiceReference(info.getInfoString(iServiceInformation.sServiceref)))
 			return bouq
 		elif self.type == self.PROVIDER:
-			if IPTVcontrol:
-				return self.getIPTVProvider(sname)
-			else:
-				return ref and self.getProviderName(ref) or info.getInfoString(iServiceInformation.sProvider)
-		elif self.type == self.ALLREFERENCE:
-			if IPTVcontrol:
-				orbp = "0.0°E"
-				prov= "%s" % (self.getIPTVProvider(sname))
-			else:        
-				orbp = "%s" % (self.getTransponderInfo(info, ref, 'O'))
-				prov = "%s" % (ref and self.getProviderName(ref) or info.getInfoString(iServiceInformation.sProvider))
-			refer = "%s" % (ref and ref.toString() or info.getInfoString(iServiceInformation.sServiceref))
-			return "%s,,,%s,,,%s" % (refer, prov, orbp)
+			return ref and self.getProviderName(ref, sname) or info.getInfoString(iServiceInformation.sProvider)
 		elif self.type == self.REFERENCE:
 			return ref and ref.toString() or info.getInfoString(iServiceInformation.sServiceref)
-		elif self.type == self.ORBPOS:
-			if IPTVcontrol:
-				return "0.0°E"
+		elif self.type == self.ORBPOS or self.type == self.TPRDATA:
+			if 'http' in sname:
+				snameIptv = True
 			else:
-				return self.getTransponderInfo(info, ref, 'O')
-		elif self.type == self.TPRDATA:
-			if IPTVcontrol:
-				return "0.0°E - Internet TV - %s" % (self.getIPTVProvider(sname))
+				snameIptv = False
+			if self.type == self.ORBPOS:
+				if snameIptv:
+					return "0.0°E"
+				else:
+					return self.getTransponderInfo(info, ref, '%O')
+			elif snameIptv:
+				return "0.0°E - Internet TV - %s"%(self.getIPTVProvider(sname))
 			else:
-				return self.getTransponderInfo(info, ref, 'T')
+				return self.getTransponderInfo(info, ref, '%T')
 		elif self.type == self.SATELLITE:
-			return self.getSatelliteName(ref or eServiceReference(info.getInfoString(iServiceInformation.sServiceref)))
+			return self.getSatelliteName((ref or eServiceReference(info.getInfoString(iServiceInformation.sServiceref))), sname)
 		elif self.type == self.FORMAT:
 			num = bouq = ''
 			#if '%n' in self.sfmt or '%B' in self.sfmt:
@@ -395,16 +381,13 @@ class ServiceName2(Converter, object):
 					num, bouq = self.getServiceNumber(ref or eServiceReference(info.getInfoString(iServiceInformation.sServiceref)))
 					ret += bouq
 				elif f == 'P':	# %P - Provider
-					if IPTVcontrol:
-						ret += self.getIPTVProvider(sname)
-					else:
-						ret += ref and self.getProviderName(ref) or info.getInfoString(iServiceInformation.sProvider)
+					ret += ref and self.getProviderName(ref, sname) or info.getInfoString(iServiceInformation.sProvider)
 				elif f == 'R':	# %R - Reference
 					ret += ref and ref.toString() or info.getInfoString(iServiceInformation.sServiceref)
 				elif f == 'S':	# %S - Satellite
-					ret += self.getSatelliteName(ref or eServiceReference(info.getInfoString(iServiceInformation.sServiceref)))
+					ret += self.getSatelliteName((ref or eServiceReference(info.getInfoString(iServiceInformation.sServiceref))), sname)
 				elif f in 'TtsFfiOMpYroclhmgbe':
-					ret += self.getTransponderInfo(info, ref, f)
+					ret += self.getTransponderInfo(info, ref, '%'+f)
 				ret += line[1:]
 			return '%s'%(ret.replace('N/A', ''))
 
