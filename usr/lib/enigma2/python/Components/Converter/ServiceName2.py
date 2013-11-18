@@ -370,11 +370,11 @@ class ServiceName2(Converter, object):
 			#if '%n' in self.sfmt or '%B' in self.sfmt:
 				#num, bouq = self.getServiceNumber(ref or eServiceReference(info.getInfoString(iServiceInformation.sServiceref)))
 			tmp = self.sfmt[:].split("%")
-			if tmp and tmp[0]:
+			if tmp:
 				ret = tmp[0]
 				tmp.remove(ret)
 			else:
-				ret = ""
+				return ""
 			for line in tmp:
 				f = line[:1]
 				if f == 'N':	# %N - Name
