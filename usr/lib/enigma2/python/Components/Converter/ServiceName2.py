@@ -349,10 +349,10 @@ class ServiceName2(Converter, object):
 			else:        
 				orbp = "%s" % (self.getTransponderInfo(info, ref, 'O'))
 				prov = "%s" % (ref and self.getProviderName(ref) or info.getInfoString(iServiceInformation.sProvider))
-			refer = "%s" % (ref and ref.toString() or info.getInfoString(iServiceInformation.sServiceref))
+			refer = "%s" % (sname)
 			return "%s,,,%s,,,%s" % (refer, prov, orbp)
 		elif self.type == self.REFERENCE:
-			return ref and ref.toString() or info.getInfoString(iServiceInformation.sServiceref)
+			return sname
 		elif self.type == self.ORBPOS:
 			if IPTVcontrol:
 				return "0.0°E"
@@ -400,7 +400,7 @@ class ServiceName2(Converter, object):
 					else:
 						ret += ref and self.getProviderName(ref) or info.getInfoString(iServiceInformation.sProvider)
 				elif f == 'R':	# %R - Reference
-					ret += ref and ref.toString() or info.getInfoString(iServiceInformation.sServiceref)
+					ret += sname
 				elif f == 'S':	# %S - Satellite
 					ret += self.getSatelliteName(ref or eServiceReference(info.getInfoString(iServiceInformation.sServiceref)))
 				elif f in 'TtsFfiOMpYroclhmgbe':
