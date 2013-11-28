@@ -1,6 +1,6 @@
 #
 #  CaidInfo2 - Converter
-#  ver 1.2.0 11.09.2013
+#  ver 1.2.1 28.11.2013
 #
 #  Coded by bigroma & 2boom
 
