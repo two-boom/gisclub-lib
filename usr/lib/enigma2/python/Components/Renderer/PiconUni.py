@@ -1,5 +1,5 @@
 # PiconUni
-# Copyright (c) 2boom 2013
+# Copyright (c) 2boom 2012-13
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
 # 26.09.2012 added search mountpoints
 # 25.06.2013 added resize picon
 # 26.11.2013 code optimization
+# 02.12.2013 added compatibility with CaidInfo2 (SatName)
 
 from Renderer import Renderer 
 from enigma import ePixmap
@@ -47,7 +48,7 @@ class PiconUni(Renderer):
 			pngname = ''
 			if (what[0] != self.CHANGED_CLEAR):
 				sname = self.source.text
-				sname = sname.upper()
+				sname = sname.upper().replace('.', '').replace('\xc2\xb0', '')
 				pngname = self.nameCache.get(sname, '')
 				if (pngname == ''):
 					pngname = self.findPicon(sname)

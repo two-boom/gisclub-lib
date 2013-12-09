@@ -69,14 +69,14 @@ class CamdInfo3(Poll, Converter, object):
 			emu = ""
 			server = ""
 			for line in open("/etc/image-version"):
-				if line.find("=AAF") > -1 or line.find("=openATV") > -1:
+				if "=AAF" in line or "=openATV" in line:
 					if config.softcam.actCam.value: 
 						emu = config.softcam.actCam.value
 					if config.softcam.actCam2.value: 
 						server = config.softcam.actCam2.value
 						if config.softcam.actCam2.value == "no CAM 2 active":
 							server = ""
-				elif line.find("=vuplus") > -1:
+				elif "=vuplus" in line:
 					if fileExists("/tmp/.emu.info"):
 						for line in open("/tmp/.emu.info"):
 							emu = line.strip('\n')
@@ -99,30 +99,29 @@ class CamdInfo3(Poll, Converter, object):
 				item = line.split(":",1)
 				if item[0] == "Current emulator":
 					return item[1].strip()
-		#Pli
+		# Pli
 		elif fileExists("/etc/init.d/softcam") or fileExists("/etc/init.d/cardserver"):
 			try:
 				for line in open("/etc/init.d/softcam"):
-					if line.find("echo") > -1:
+					if "echo" in line:
 						nameemu.append(line)
 				camdlist = "%s" % nameemu[1].split('"')[1]
 			except:
 				pass
 			try:
 				for line in open("/etc/init.d/cardserver"):
-					if line.find("echo") > -1:
+					if "echo" in line:
 						nameser.append(line)
 				serlist = "%s" % nameser[1].split('"')[1]
 			except:
 				pass
-			if serlist is None:
-				serlist = ""
-			elif camdlist is None:
-				camdlist = ""
-			elif serlist is None and camdlist is None:
-				serlist = ""
-				camdlist = ""
-			return ("%s %s" % (serlist, camdlist))
+			if serlist is not None and camdlist is not None:
+				return ("%s %s" % (serlist, camdlist))
+			elif camdlist is not None:
+				return "%s" % camdlist
+			elif serlist is not None:
+				return "%s" % serlist
+			return ""
 		# OoZooN
 		elif fileExists("/tmp/cam.info"):
 			try:

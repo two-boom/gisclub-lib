@@ -1,6 +1,6 @@
 # ServiceInfoEX
 # Copyright (c) 2boom 2013
-# v.0.8 21.09.13
+# v.0.9 29.11.2013
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -50,6 +50,7 @@ class ServiceInfoEX(Poll, Converter, object):
 	SUBTITLES_AVAILABLE = 25
 	EDITMODE = 26
 	FRAMERATE = 27
+	IS_FTA = 28
 	
 	def __init__(self, type):
 		Converter.__init__(self, type)
@@ -100,6 +101,8 @@ class ServiceInfoEX(Poll, Converter, object):
 			self.type = self.IS_MULTICHANNEL
 		elif  type == "IsCrypted":
 			self.type = self.IS_CRYPTED
+		elif  type == "IsFta":
+			self.type = self.IS_FTA
 		elif  type == "SubservicesAvailable":
 			self.type = self.SUBSERVICES_AVAILABLE
 		elif  type == "AudioTracksAvailable":
@@ -147,6 +150,7 @@ class ServiceInfoEX(Poll, Converter, object):
 		info = service and service.info()
 		if not info:
 			return ""
+		
 		if self.getServiceInfoString(info, iServiceInformation.sAudioPID) != "N/A":
 			self.stream['apid'] = "%0.4X" % int(self.getServiceInfoString(info, iServiceInformation.sAudioPID))
 		if self.getServiceInfoString(info, iServiceInformation.sVideoPID) != "N/A":
@@ -255,7 +259,6 @@ class ServiceInfoEX(Poll, Converter, object):
 			tpid = info.getInfo(iServiceInformation.sTXTPID)
 			return tpid != -1
 		elif self.type == self.IS_MULTICHANNEL:
-			# FIXME. but currently iAudioTrackInfo doesn't provide more information.
 			audio = service.audioTracks()
 			if audio:
 				n = audio.getNumberOfTracks()
@@ -269,6 +272,8 @@ class ServiceInfoEX(Poll, Converter, object):
 			return False
 		elif self.type == self.IS_CRYPTED:
 			return info.getInfo(iServiceInformation.sIsCrypted) == 1
+		elif self.type == self.IS_FTA:
+			return info.getInfo(iServiceInformation.sIsCrypted) == 0
 		elif self.type == self.IS_WIDESCREEN:
 			return info.getInfo(iServiceInformation.sAspect) in WIDESCREEN
 		elif self.type == self.SUBSERVICES_AVAILABLE:
@@ -292,7 +297,7 @@ class ServiceInfoEX(Poll, Converter, object):
 
 	def changed(self, what):
 		if what[0] == self.CHANGED_SPECIFIC:
-			if what[1] == iPlayableService.evStart or what[1] == iPlayableService.evVideoSizeChanged or what[1] == iPlayableService.evUpdatedInfo:
+			if what[1] == iPlayableService.evVideoSizeChanged or what[1] == iPlayableService.evUpdatedInfo:
 				Converter.changed(self, what)
 		elif what[0] != self.CHANGED_SPECIFIC or what[1] in self.interesting_events:
 			Converter.changed(self, what)
