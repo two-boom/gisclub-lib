@@ -91,6 +91,7 @@ class EmuName(Poll, Converter, object):
 
 		if cardname:
 			for line in cardname:
+				info2 = ""
 				if 'oscam' in line.lower():
 					info2 = 'oscam'
 				elif 'newcs' in line.lower():
@@ -99,12 +100,11 @@ class EmuName(Poll, Converter, object):
 					info2 = 'wicardd'
 				elif 'cccam' in line.lower():
 					info2 = 'cccam'
-				else:
-					info2 = ""
 			cardname.close()
 		if camdname:
 			camdlist = camdname
 		if camdlist:
+			info = 'unknow'
 			for line in camdlist:
 				if 'mgcamd' in line.lower() and 'oscam' in line.lower():
 					info = 'oscammgcamd'
@@ -134,8 +134,6 @@ class EmuName(Poll, Converter, object):
 					info = 'mpcs'
 				elif 'sbox' in line.lower():
 					info = 'sbox'
-				else:
-					info = 'unknow'
 		if camdname:
 			camdname.close()
 		return info2 + info

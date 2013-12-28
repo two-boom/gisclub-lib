@@ -10,7 +10,8 @@
 # Version: 0.8 (29.10.2013) add correct output channelnumner - Dmitry73
 # Version: 0.9 (18.11.2013) code fix and optimization - Taapat & nikolasi
 # Version: 1.0 (04.12.2013) code fix and optimization - Dmitry73
-# Version: 1.1 (06.12.2013) small cosmetic fix - 2boom
+# Version: 1.1 (06-17.12.2013) small cosmetic fix - 2boom
+# Version: 1.2 (25.12.2013) small iptv fix - MegAndretH
 # Support: http://dream.altmaster.net/ & http://gisclub.tv
 #
 
@@ -335,6 +336,8 @@ class ServiceName2(Converter, object):
 							return ''
 						elif refString.startswith("1:134:"):
 							return _("Alternative")
+						elif refString.startswith("4097:"):
+							return _("Internet")
 						else:
 							return orbpos > 1800 and "%d.%d°W"%((3600-orbpos)/10, (3600-orbpos)%10) or "%d.%d°E"%(orbpos/10, orbpos%10)
 		return ""
@@ -346,8 +349,6 @@ class ServiceName2(Converter, object):
 			return "Ukrtelecom"
 		elif '3a7777' in refstr:
 			return "IPTVNTV"
-		elif '3a1234' in refstr:
-			return "IPTV1"
 		elif 'KartinaTV' in refstr:
 			return "KartinaTV"
 		elif 'Megaimpuls' in refstr:
@@ -366,6 +367,10 @@ class ServiceName2(Converter, object):
 			return "NonameTV"
 		elif 'unicast' in refstr:
 			return "StarLink"
+		elif '3a1234' in refstr:
+			return "IPTV1"
+		elif '0:0:0:0:0:0:http%3a//' in refstr:
+			return "StarNet"
 		return ""
 
 	def getPlayingref(self, ref):

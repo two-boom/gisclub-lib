@@ -41,6 +41,29 @@ class CamdInfo3(Poll, Converter, object):
 			else: 
 				return None
 		# TS-Panel
+		# Pli
+		elif fileExists("/etc/init.d/softcam") or fileExists("/etc/init.d/cardserver"):
+			try:
+				for line in open("/etc/init.d/softcam"):
+					if "echo" in line:
+						nameemu.append(line)
+				camdlist = "%s" % nameemu[1].split('"')[1]
+			except:
+				pass
+			try:
+				for line in open("/etc/init.d/cardserver"):
+					if "echo" in line:
+						nameser.append(line)
+				serlist = "%s" % nameser[1].split('"')[1]
+			except:
+				pass
+			if serlist is not None and camdlist is not None:
+				return ("%s %s" % (serlist, camdlist))
+			elif camdlist is not None:
+				return "%s" % camdlist
+			elif serlist is not None:
+				return "%s" % serlist
+			return ""
 		elif fileExists("/etc/startcam.sh"):
 			try:
 				for line in open("/etc/startcam.sh"):
@@ -99,29 +122,7 @@ class CamdInfo3(Poll, Converter, object):
 				item = line.split(":",1)
 				if item[0] == "Current emulator":
 					return item[1].strip()
-		# Pli
-		elif fileExists("/etc/init.d/softcam") or fileExists("/etc/init.d/cardserver"):
-			try:
-				for line in open("/etc/init.d/softcam"):
-					if "echo" in line:
-						nameemu.append(line)
-				camdlist = "%s" % nameemu[1].split('"')[1]
-			except:
-				pass
-			try:
-				for line in open("/etc/init.d/cardserver"):
-					if "echo" in line:
-						nameser.append(line)
-				serlist = "%s" % nameser[1].split('"')[1]
-			except:
-				pass
-			if serlist is not None and camdlist is not None:
-				return ("%s %s" % (serlist, camdlist))
-			elif camdlist is not None:
-				return "%s" % camdlist
-			elif serlist is not None:
-				return "%s" % serlist
-			return ""
+		
 		# OoZooN
 		elif fileExists("/tmp/cam.info"):
 			try:

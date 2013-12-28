@@ -1,4 +1,19 @@
-# mod by 2boom 2012-13 v. 1.1 
+#EventName2 Converter
+# Copyright (c) 2boom 2012-13
+# v.1.2-r0
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
 from Components.Converter.Converter import Converter
 from Components.Element import cached
 from enigma import eEPGCache
@@ -15,6 +30,10 @@ class EventName2(Converter, object):
 	NEXT_NAMEWT = 7
 	NEXT_NAME_NEXT = 8
 	NEXT_NAME_NEXTWT = 9
+	NEXT_EVENT_LIST = 10
+	NEXT_EVENT_LISTWT = 11
+	NEXT_EVENT_LIST2 = 12
+	NEXT_EVENT_LISTWT2 = 13
 	
 	def __init__(self, type):
 		Converter.__init__(self, type)
@@ -37,6 +56,14 @@ class EventName2(Converter, object):
 			self.type = self.NEXT_NAMEWT
 		elif type == "NextDescription" or type == "NextEvent":
 			self.type = self.NEXT_DESCRIPTION
+		elif type == "NextEventList":
+			self.type = self.NEXT_EVENT_LIST
+		elif type == "NextEventListWithOutTime":
+			self.type = self.NEXT_EVENT_LISTWT
+		elif type == "NextEventList2":
+			self.type = self.NEXT_EVENT_LIST2
+		elif type == "NextEventListWithOutTime2":
+			self.type = self.NEXT_EVENT_LISTWT2
 		else:
 			self.type = self.NAME
 
@@ -59,7 +86,9 @@ class EventName2(Converter, object):
 			return description + extended
 		elif self.type == self.ID:
 			return str(event.getEventId())
-		elif self.type == self.NEXT_NAME or self.type == self.NEXT_NAME_NEXTWT or self.type == self.NEXT_NAME_NEXT or self.type == self.NEXT_DESCRIPTION or self.type == self.NEXT_NAMEWT:
+		elif self.type == self.NEXT_NAME or self.type == self.NEXT_EVENT_LISTWT or \
+		self.type == self.NEXT_EVENT_LIST or self.type == self.NEXT_NAME_NEXTWT or self.type == self.NEXT_NAME_NEXT or \
+		self.type == self.NEXT_DESCRIPTION or self.type == self.NEXT_NAMEWT or self.type == self.NEXT_EVENT_LISTWT2 or self.type == self.NEXT_EVENT_LIST2:
 			reference = self.source.service
 			info = reference and self.source.info
 			if info is not None:
@@ -72,6 +101,24 @@ class EventName2(Converter, object):
 						return "%02d:%02d  (%s)  %s" % (t[3], t[4], duration, eventNext[0][4])
 					else:
 						return ""
+				elif self.type == self.NEXT_EVENT_LIST or self.type == self.NEXT_EVENT_LISTWT or self.type == self.NEXT_EVENT_LIST2 or self.type == self.NEXT_EVENT_LISTWT2:
+					if eventNextNext:
+						listNextEpg = ''
+						if self.type == self.NEXT_EVENT_LIST2 or self.type == self.NEXT_EVENT_LISTWT2:
+							i = -1
+						else:
+							i = 0
+						for x in eventNextNext:
+							if i > 0 and i < 10:
+								if x[4]:
+									t = localtime(x[1])
+									if self.type == self.NEXT_EVENT_LIST or self.type == self.NEXT_EVENT_LIST2:
+										duration = _("%d min") %  (eventNextNext[i][2] / 60)
+										listNextEpg += "%02d:%02d (%s) %s\n" % (t[3], t[4], duration, x[4])
+									else:
+										listNextEpg += "%02d:%02d %s\n" % (t[3], t[4], x[4])
+							i += 1
+					return listNextEpg
 				elif self.type == self.NEXT_NAME_NEXT:
 					if len(eventNextNext) >= 3:
 						if len(eventNextNext[2]) > 4 and eventNextNext[2][4]:

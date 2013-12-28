@@ -1,6 +1,6 @@
 # ServiceInfoEX
 # Copyright (c) 2boom 2013
-# v.0.9 29.11.2013
+# v.1.0 11.12.2013
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -51,6 +51,7 @@ class ServiceInfoEX(Poll, Converter, object):
 	EDITMODE = 26
 	FRAMERATE = 27
 	IS_FTA = 28
+	HAS_HBBTV = 29
 	
 	def __init__(self, type):
 		Converter.__init__(self, type)
@@ -103,6 +104,8 @@ class ServiceInfoEX(Poll, Converter, object):
 			self.type = self.IS_CRYPTED
 		elif  type == "IsFta":
 			self.type = self.IS_FTA
+		elif  type == "HasHBBTV":
+			self.type = self.HAS_HBBTV
 		elif  type == "SubservicesAvailable":
 			self.type = self.SUBSERVICES_AVAILABLE
 		elif  type == "AudioTracksAvailable":

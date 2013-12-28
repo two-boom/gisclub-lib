@@ -18,6 +18,8 @@
 # 25.06.2013 added resize picon
 # 26.11.2013 code optimization
 # 02.12.2013 added compatibility with CaidInfo2 (SatName)
+# 18.12.2013 added picon miltipath
+# 27.12.2013 added picon reference
 
 from Renderer import Renderer 
 from enigma import ePixmap
@@ -49,6 +51,8 @@ class PiconUni(Renderer):
 			if (what[0] != self.CHANGED_CLEAR):
 				sname = self.source.text
 				sname = sname.upper().replace('.', '').replace('\xc2\xb0', '')
+				if ':' in sname:
+					sname = sname.replace(':','_',9).split(':')[0]
 				pngname = self.nameCache.get(sname, '')
 				if (pngname == ''):
 					pngname = self.findPicon(sname)
@@ -70,6 +74,9 @@ class PiconUni(Renderer):
 					self.instance.setScale(1)
 					self.instance.setPixmapFromFile(pngname)
 					self.instance.show()
+				else:
+					self.instance.hide()
+				self.pngname = pngname
 
 	def findPicon(self, serviceName):
 		searchPaths = []
@@ -78,10 +85,12 @@ class PiconUni(Renderer):
 				if "/dev/sd" in line:
 					searchPaths.append(line.split()[1].replace('\\040', ' ') + "/%s/")
 		searchPaths.append(resolveFilename(SCOPE_CURRENT_SKIN, '%s/'))
+		pathtmp = self.path.split(',')
 		for path in searchPaths:
-			pngname = (((path % self.path) + serviceName) + '.png')
-			if fileExists(pngname):
-				return pngname
+			for i in pathtmp:
+				pngname = (path % i) + serviceName + '.png'
+				if fileExists(pngname):
+					return pngname
 		return ''
 
 
